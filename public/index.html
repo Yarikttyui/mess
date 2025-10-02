@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pink Messenger</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="background-blur"></div>
+  <section class="auth-shell" id="authShell">
+    <div class="auth-card">
+      <div class="brand">
+        <h1>Pink Talk</h1>
+        <p>??????????? ??????? ??????????. ????????? ? ????? ? ?????? ???????, ???????? ???????, ???????? ? ?????????.</p>
+      </div>
+      <div class="auth-forms">
+        <div class="tabs">
+          <button class="tab active" data-target="login">????</button>
+          <button class="tab" data-target="register">???????????</button>
+        </div>
+        <form id="loginForm" class="form active" autocomplete="off">
+          <label>?????
+            <input type="text" name="username" required minlength="3" maxlength="32" placeholder="pinkstar">
+          </label>
+          <label>??????
+            <input type="password" name="password" required minlength="6" placeholder="????????">
+          </label>
+          <button type="submit" class="primary">?????</button>
+          <p class="helper">??? ????????? <span class="link" data-switch="register">???????? ???</span></p>
+        </form>
+        <form id="registerForm" class="form" autocomplete="off">
+          <label>?????
+            <input type="text" name="username" required minlength="3" maxlength="32" placeholder="pinkstar">
+          </label>
+          <label>??????
+            <input type="password" name="password" required minlength="6" placeholder="??????? 6 ????????">
+          </label>
+          <button type="submit" class="primary">??????? ???????</button>
+          <p class="helper">??? ????????????????? <span class="link" data-switch="login">???????</span></p>
+        </form>
+        <p class="form-message" id="authMessage"></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="app-shell hidden" id="appShell">
+    <aside class="sidebar">
+      <div class="profile-card">
+        <div class="avatar" id="profileAvatar"></div>
+        <div class="profile-info">
+          <h2 id="profileName"></h2>
+          <p id="profileStatus"></p>
+        </div>
+        <div class="profile-actions">
+          <button class="ghost small" id="profileEditBtn">?????????????</button>
+          <button class="ghost small" id="logoutBtn">?????</button>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="primary" id="newGroupBtn">+ ????? ??????</button>
+        <button class="ghost" id="newDirectBtn">+ ?????? ???</button>
+      </div>
+      <div class="sidebar-search">
+        <input type="text" id="conversationFilter" placeholder="????? ?????? ??? ????????????">
+      </div>
+      <div class="conversation-list" id="conversationList"></div>
+    </aside>
+
+    <main class="chat-area">
+      <div class="chat-placeholder" id="chatPlaceholder">
+        <h1>Pink Talk 2.0</h1>
+        <p>???????? ?????? ????? ??? ???????? ?????. ??? ??????? ? ? ????? ??????? ????????????.</p>
+      </div>
+      <section class="messenger hidden" id="messenger">
+        <header class="chat-header">
+          <div class="chat-title">
+            <div class="avatar" id="conversationAvatar"></div>
+            <div>
+              <h2 id="conversationTitle"></h2>
+              <p id="conversationMeta"></p>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="ghost" id="addMemberBtn">??????????</button>
+            <button class="ghost" id="detailsToggleBtn">?????????</button>
+          </div>
+        </header>
+        <div class="chat-info">
+          <span id="typingIndicator" class="typing hidden"></span>
+        </div>
+        <div class="message-scroller" id="messageScroller">
+          <button class="ghost small hidden" id="loadMoreBtn">???????? ??????</button>
+          <div class="message-list" id="messageList"></div>
+        </div>
+        <form class="composer" id="messageForm" autocomplete="off">
+          <div class="attachment-bar hidden" id="attachmentBar"></div>
+          <div class="composer-row">
+            <label class="attachment-btn" title="?????????? ???????????">
+              <input type="file" id="attachmentInput" accept="image/*" hidden>
+              ??
+            </label>
+            <textarea id="messageInput" rows="1" placeholder="???????? ?????????..." maxlength="4000"></textarea>
+            <button type="submit" class="primary">?????????</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <aside class="details hidden" id="detailsPanel">
+      <div class="details-header">
+        <h3>?????????</h3>
+        <button class="ghost" id="detailsCloseBtn">?</button>
+      </div>
+      <div class="details-content">
+        <ul id="memberList"></ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal hidden" id="profileModal">
+    <div class="modal-content">
+      <h2>????????? ???????</h2>
+      <form id="profileForm">
+        <label>???
+          <input type="text" name="displayName" required minlength="2" maxlength="60">
+        </label>
+        <label>??????
+          <input type="text" name="statusMessage" maxlength="160" placeholder="????????: ?????? ?? ?????">
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>??????</button>
+          <button type="submit" class="primary">?????????</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="groupModal">
+    <div class="modal-content">
+      <h2>????? ??????</h2>
+      <form id="groupForm">
+        <label>????????
+          <input type="text" name="title" required minlength="3" maxlength="100">
+        </label>
+        <label>????????
+          <textarea name="description" rows="3" maxlength="500" placeholder="? ??? ??? ???????"></textarea>
+        </label>
+        <label>????????? (?????? ????? ???????)
+          <input type="text" name="members" placeholder="user1, user2">
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="isPrivate">
+          <span>??????? ????????</span>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>??????</button>
+          <button type="submit" class="primary">???????</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="directModal">
+    <div class="modal-content">
+      <h2>?????? ???</h2>
+      <form id="directForm">
+        <label>????? ????????????
+          <input type="text" name="username" required minlength="3" maxlength="32">
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="ghost" data-close>??????</button>
+          <button type="submit" class="primary">??????</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+</body>
+</html>
